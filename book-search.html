@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Books - Library Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-book"></i> Library Management System
+            </a>
+            <div class="navbar-nav ms-auto">
+                <!-- Filled dynamically by book-search.js based on admin/student -->
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="dashboard-header">
+        <div class="container">
+            <h1><i class="fas fa-search"></i> Search Books</h1>
+        </div>
+    </div>
+
+    <div class="container mt-4">
+        <!-- Search Form -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="dashboard-card">
+                    <div class="card-header-custom">
+                        <h5 class="mb-0"><i class="fas fa-filter"></i> Search Filters</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="searchForm">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label for="searchQuery" class="form-label">Search</label>
+                                    <input type="text" class="form-control" id="searchQuery" placeholder="Title, Author, or ISBN...">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="category" class="form-label">Category</label>
+                                    <select class="form-select" id="category">
+                                        <option value="">All Categories</option>
+                                        <option value="computer-science">Computer Science</option>
+                                        <option value="mathematics">Mathematics</option>
+                                        <option value="physics">Physics</option>
+                                        <option value="literature">Literature</option>
+                                        <option value="history">History</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="availability" class="form-label">Availability</label>
+                                    <select class="form-select" id="availability">
+                                        <option value="">All</option>
+                                        <option value="available">Available</option>
+                                        <option value="issued">Issued</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2 d-flex align-items-end">
+                                    <button type="submit" id="searchButton" class="btn btn-action w-100">
+                                        <i class="fas fa-search"></i> Search
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Results -->
+        <div class="row">
+            <div class="col-12">
+                <div class="dashboard-card">
+                    <div class="card-header-custom d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-books"></i> Search Results</h5>
+                        <span class="badge bg-primary" id="resultsCountBadge">0 books found</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Book ID</th>
+                                        <th>Title</th>
+                                        <th>Author</th>
+                                        <th>Category</th>
+                                        <th>Availability</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="booksTableBody">
+                                    <!-- Filled dynamically by book-search.js -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Book Details Modal -->
+    <div class="modal fade" id="bookDetailsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-book"></i> Book Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Book ID:</strong> <span id="detailBookId"></span></p>
+                    <p><strong>Title:</strong> <span id="detailTitle"></span></p>
+                    <p><strong>Author:</strong> <span id="detailAuthor"></span></p>
+                    <p><strong>Category:</strong> <span id="detailCategory"></span></p>
+                    <p><strong>ISBN:</strong> <span id="detailISBN"></span></p>
+                    <p><strong>Publisher:</strong> <span id="detailPublisher"></span></p>
+                    <p><strong>Published Year:</strong> <span id="detailYear"></span></p>
+                    <p><strong>Available Copies:</strong> <span id="detailCopies"></span></p>
+                    <p><strong>Total Copies:</strong> <span id="detailTotal"></span></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/book-search.js"></script>
+</body>
+</html>

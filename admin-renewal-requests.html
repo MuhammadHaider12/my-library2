@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Renewal Requests - Library Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        .renewal-card {
+            border-left: 4px solid #3498db;
+            margin-bottom: 1rem;
+        }
+        .renewal-card.pending {
+            border-left-color: #f39c12;
+        }
+        .renewal-card.approved {
+            border-left-color: #27ae60;
+        }
+        .renewal-card.rejected {
+            border-left-color: #e74c3c;
+        }
+        .status-badge {
+            font-size: 0.875rem;
+            padding: 0.5rem 1rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-book"></i> Library Admin
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="admin-dashboard.html">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+                <span class="nav-link">Welcome, Admin (<span id="adminUsernameDisplay"></span>)</span>
+                <a class="nav-link" href="index.html">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="dashboard-header">
+        <div class="container">
+            <h1><i class="fas fa-sync-alt"></i> Book Renewal Requests</h1>
+        </div>
+    </div>
+
+    <div class="container mt-4">
+        <!-- Filter Tabs -->
+        <div class="mb-4">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#pending" data-bs-toggle="tab" onclick="loadRequests('pending')">
+                        <i class="fas fa-hourglass-half"></i> Pending <span class="badge bg-warning ms-2" id="pendingCount">0</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#approved" data-bs-toggle="tab" onclick="loadRequests('approved')">
+                        <i class="fas fa-check-circle"></i> Approved <span class="badge bg-success ms-2" id="approvedCount">0</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#rejected" data-bs-toggle="tab" onclick="loadRequests('rejected')">
+                        <i class="fas fa-times-circle"></i> Rejected <span class="badge bg-danger ms-2" id="rejectedCount">0</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#all" data-bs-toggle="tab" onclick="loadRequests('')">
+                        <i class="fas fa-list"></i> All Requests
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Requests Container -->
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="pending">
+                <div id="requestsContainer"></div>
+            </div>
+            <div class="tab-pane fade" id="approved"></div>
+            <div class="tab-pane fade" id="rejected"></div>
+            <div class="tab-pane fade" id="all"></div>
+        </div>
+    </div>
+
+    <!-- Rejection Reason Modal -->
+    <div class="modal fade" id="rejectionModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Reject Renewal Request</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="rejectionForm">
+                        <div class="mb-3">
+                            <label for="rejectionReason" class="form-label">Reason for Rejection</label>
+                            <textarea class="form-control" id="rejectionReason" rows="3" required placeholder="Explain why you're rejecting this renewal request..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" onclick="submitRejection()">Reject Request</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let allRequests = [];
+        let currentRequestToReject = null;
+
+        async function loadRequests(status = 'pending') {
+            const adminUsername = sessionStorage.getItem('adminUsername') || localStorage.getItem('adminUsername');
+            document.getElementById('adminUsernameDisplay').innerText = adminUsername;
+
+            try {
+                const url = status ? `http://localhost:3000/admin/renewal-requests?status=${status}` : 'http://localhost:3000/admin/renewal-requests';
+                const res = await fetch(url);
+                const data = await res.json();
+
+                if (!data.success) {
+                    console.error('Error fetching requests:', data.message);
+                    document.getElementById('requestsContainer').innerHTML = '<div class="alert alert-danger">Error loading requests</div>';
+                    return;
+                }
+
+                allRequests = data.requests || [];
+                displayRequests(allRequests, status);
+                updateCounts();
+
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('requestsContainer').innerHTML = '<div class="alert alert-danger">Error loading requests</div>';
+            }
+        }
+
+        function displayRequests(requests, status) {
+            const container = document.getElementById('requestsContainer');
+            
+            if (!requests || requests.length === 0) {
+                container.innerHTML = `<div class="alert alert-info">No ${status || 'renewal'} requests found</div>`;
+                return;
+            }
+
+            container.innerHTML = '';
+
+            requests.forEach(req => {
+                const card = document.createElement('div');
+                card.className = `card renewal-card ${req.status}`;
+                
+                const requestDate = new Date(req.requested_at).toLocaleDateString();
+                const approvalDate = req.approved_at ? new Date(req.approved_at).toLocaleDateString() : 'N/A';
+                
+                let actionButtons = '';
+                if (req.status === 'pending') {
+                    actionButtons = `
+                        <button class="btn btn-sm btn-success" onclick="approveRequest(${req.request_id})">
+                            <i class="fas fa-check"></i> Approve
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="openRejectionModal(${req.request_id})">
+                            <i class="fas fa-times"></i> Reject
+                        </button>
+                    `;
+                } else {
+                    actionButtons = `<span class="badge bg-${req.status === 'approved' ? 'success' : 'danger'}">${req.status.toUpperCase()}</span>`;
+                }
+
+                card.innerHTML = `
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <h5 class="card-title">${req.title}</h5>
+                                <p class="card-text text-muted">by ${req.author || 'Unknown'}</p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <span class="status-badge badge bg-${req.status === 'pending' ? 'warning' : (req.status === 'approved' ? 'success' : 'danger')}">
+                                    ${req.status.toUpperCase()}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3 small text-muted">
+                            <div class="col-md-6">
+                                <strong>Student:</strong> ${req.first_name} ${req.last_name}<br>
+                                <strong>Email:</strong> ${req.email}<br>
+                                <strong>Book ID:</strong> ${req.book_id}
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Current Due Date:</strong> ${new Date(req.current_due_date).toLocaleDateString()}<br>
+                                <strong>Requested:</strong> ${requestDate}<br>
+                                ${req.status !== 'pending' ? `<strong>Processed:</strong> ${approvalDate}` : ''}
+                            </div>
+                        </div>
+
+                        ${req.rejection_reason ? `<div class="alert alert-danger small mb-3"><strong>Rejection Reason:</strong> ${req.rejection_reason}</div>` : ''}
+
+                        <div class="d-flex gap-2">
+                            ${actionButtons}
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        async function updateCounts() {
+            try {
+                const res = await fetch('http://localhost:3000/admin/renewal-requests');
+                const data = await res.json();
+                const requests = data.requests || [];
+
+                const pendingCount = requests.filter(r => r.status === 'pending').length;
+                const approvedCount = requests.filter(r => r.status === 'approved').length;
+                const rejectedCount = requests.filter(r => r.status === 'rejected').length;
+
+                document.getElementById('pendingCount').innerText = pendingCount;
+                document.getElementById('approvedCount').innerText = approvedCount;
+                document.getElementById('rejectedCount').innerText = rejectedCount;
+
+            } catch (error) {
+                console.error('Error updating counts:', error);
+            }
+        }
+
+        async function approveRequest(requestId) {
+            const adminUsername = sessionStorage.getItem('adminUsername') || localStorage.getItem('adminUsername');
+
+            if (confirm('Approve this renewal request? The book due date will be extended by 30 days.')) {
+                try {
+                    const res = await fetch(`http://localhost:3000/admin/renewal-requests/${requestId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'approve',
+                            adminUsername
+                        })
+                    });
+
+                    const result = await res.json();
+
+                    if (result.success) {
+                        alert(result.message);
+                        loadRequests('pending');
+                    } else {
+                        alert('Error: ' + result.message);
+                    }
+                } catch (error) {
+                    console.error('Error approving request:', error);
+                    alert('Failed to approve request');
+                }
+            }
+        }
+
+        function openRejectionModal(requestId) {
+            currentRequestToReject = requestId;
+            document.getElementById('rejectionReason').value = '';
+            const modal = new bootstrap.Modal(document.getElementById('rejectionModal'));
+            modal.show();
+        }
+
+        async function submitRejection() {
+            const rejectionReason = document.getElementById('rejectionReason').value.trim();
+            const adminUsername = sessionStorage.getItem('adminUsername') || localStorage.getItem('adminUsername');
+
+            if (!rejectionReason) {
+                alert('Please provide a rejection reason');
+                return;
+            }
+
+            try {
+                const res = await fetch(`http://localhost:3000/admin/renewal-requests/${currentRequestToReject}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'reject',
+                        rejection_reason: rejectionReason,
+                        adminUsername
+                    })
+                });
+
+                const result = await res.json();
+
+                if (result.success) {
+                    alert(result.message);
+                    bootstrap.Modal.getInstance(document.getElementById('rejectionModal')).hide();
+                    loadRequests('pending');
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error rejecting request:', error);
+                alert('Failed to reject request');
+            }
+        }
+
+        // Load pending requests on page load
+        loadRequests('pending');
+    </script>
+</body>
+</html>

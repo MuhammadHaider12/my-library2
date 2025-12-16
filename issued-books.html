@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Issued Books - Library Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-book"></i> Library Management System
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="student-dashboard.html">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+                <span class="nav-link">Welcome, Student (ID: <span id="studentIdDisplay"></span>)</span>
+                <a class="nav-link" href="index.html">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="dashboard-header">
+        <div class="container">
+            <h1><i class="fas fa-list"></i> My Issued Books</h1>
+        </div>
+    </div>
+
+    <div class="container mt-4">
+        <!-- Statistics -->
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                <div class="stats-card">
+                    <div class="stats-number"><span id = "currentlyIssued"></span></div>
+                    <div>Currently Issued</div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="stats-card">
+                    <div class="stats-number"><span id="totalBooksRead"></span></div>
+                    <div>Total Books Read</div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="stats-card">
+                    <div class="stats-number"><span id="Overdue"></span></div>
+                    <div>Overdue Books</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Currently Issued Books -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="dashboard-card">
+                    <div class="card-header-custom">
+                        <h5 class="mb-0"><i class="fas fa-clock"></i> Currently Issued Books</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Book ID</th>
+                                        <th>Title</th>
+                                        <th>Author</th>
+                                        <th>Issue Date</th>
+                                        <th>Due Date</th>
+                                        <th>Days Left</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="issued-books-table"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Issued Books History -->
+        <div class="row">
+            <div class="col-12">
+                <div class="dashboard-card">
+                    <div class="card-header-custom">
+                        <h5 class="mb-0"><i class="fas fa-history"></i> Issued Books History</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Book ID</th>
+                                        <th>Title</th>
+                                        <th>Author</th>
+                                        <th>Issue Date</th>
+                                        <th>Return Date</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="issuedBooksHistoryTable">
+                                    
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+          async function loadIssuedBooks() {
+              const studentId = sessionStorage.getItem('studentId') || localStorage.getItem('studentId');
+
+            if (!studentId) {
+                alert("Please login first");
+                window.location.href = "student-login.html";
+                return;
+            }
+            document.getElementById("studentIdDisplay").innerText = studentId;
+            
+            try {
+                const res = await fetch(`http://localhost:3000/student/${studentId}/issued-books`);
+                if (!res.ok) {
+                    console.error('Error response:', res.status);
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
+                const data = await res.json();
+                console.log('Issued books data:', data);
+                
+                const tableBody = document.getElementById("issued-books-table");
+                tableBody.innerHTML = "";
+                
+                // Handle both array and object responses
+                const currentlyIssued = Array.isArray(data) ? data.filter(b => !b.is_due) : (data.currentlyIssued || []);
+                const overdueCount = Array.isArray(data) ? 0 : (data.overdueCount || 0);
+                const totalBooksRead = Array.isArray(data) ? 0 : (data.totalBooksRead || 0);
+                
+                document.getElementById("currentlyIssued").innerText = currentlyIssued.length;
+                document.getElementById("totalBooksRead").innerText = totalBooksRead;
+                document.getElementById("Overdue").innerText = overdueCount;
+                
+                if (currentlyIssued.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No currently issued books</td></tr>';
+                    return;
+                }
+                
+                currentlyIssued.forEach(b => {
+                    let badgeClass = 'bg-secondary';
+                    let daysText = 'Invalid date';
+                    
+                    if (b.daysLeft !== null && !isNaN(b.daysLeft)) {
+                        badgeClass = b.daysLeft > 7 ? 'bg-success' : (b.daysLeft >= 0 ? 'bg-warning' : 'bg-danger');
+                        daysText = b.daysLeft >= 0 ? `${b.daysLeft} days` : `Overdue ${Math.abs(b.daysLeft)} days`;
+                    }
+
+                    tableBody.innerHTML += `
+                    <tr>
+                        <td>${b.book_id}</td>
+                        <td>${b.title}</td>
+                        <td>${b.author}</td>
+                        <td>${new Date(b.issue_date).toLocaleDateString()}</td>
+                        <td>${new Date(b.due_date).toLocaleDateString()}</td>
+                        <td><span class="badge ${badgeClass}">${daysText}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-action" onclick="renewThisBook('${b.issue_id}', '${b.book_id}')">
+                                <i class="fas fa-redo"></i> Renew
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                });
+            } catch (error) {
+                console.error('Error loading issued books:', error);
+                const tableBody = document.getElementById("issued-books-table");
+                tableBody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Error loading issued books</td></tr>';
+            }
+
+        }
+        async function loadIssuedBooksHistory() {
+            const studentId = sessionStorage.getItem('studentId') || localStorage.getItem('studentId');
+            if (!studentId) return;
+            
+            try {
+                const res = await fetch(`http://localhost:3000/student/${studentId}/issued-books-history`);
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                
+                const history = await res.json();
+                console.log('History data:', history);
+
+                const tableBody = document.getElementById("issuedBooksHistoryTable");
+                tableBody.innerHTML = "";
+
+                if (!history || history.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No books returned yet</td></tr>';
+                    return;
+                }
+
+                history.forEach(b => {
+                    tableBody.innerHTML += `
+                    <tr>
+                        <td>${b.book_id}</td>
+                        <td>${b.title}</td>
+                        <td>${b.author}</td>
+                        <td>${new Date(b.issue_date).toLocaleDateString()}</td>
+                        <td>${new Date(b.due_date).toLocaleDateString()}</td>
+                        <td><span class="badge bg-success">Returned</span></td>
+                    </tr>
+                    `;
+                });
+            } catch (error) {
+                console.error('Error loading history:', error);
+                const tableBody = document.getElementById("issuedBooksHistoryTable");
+                tableBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error loading history</td></tr>';
+            }
+        }
+        async function renewThisBook(issueId, bookId) {
+            const studentId = sessionStorage.getItem('studentId') || localStorage.getItem('studentId');
+            
+            try {
+                // First, fetch the current issued book to check daysLeft
+                const res = await fetch(`http://localhost:3000/student/${studentId}/issued-books`);
+                const data = await res.json();
+                
+                const currentBook = data.currentlyIssued.find(b => b.issue_id == issueId);
+                
+                if (!currentBook) {
+                    alert('Book record not found');
+                    return;
+                }
+
+                // Check if daysLeft is between 1 and 30
+                if (currentBook.daysLeft < 1 || currentBook.daysLeft > 30) {
+                    alert(`Cannot request renewal. Days remaining must be between 1-30. Current: ${currentBook.daysLeft} days`);
+                    return;
+                }
+
+                // Show confirmation with days remaining info
+                if (confirm(`Request renewal for "${currentBook.title}"?\nDays remaining: ${currentBook.daysLeft}\n\nYour request will be sent to the admin for approval based on book availability.`)) {
+                    // Send renewal request to backend
+                    const renewRes = await fetch(`http://localhost:3000/student/${studentId}/request-renewal`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ issue_id: issueId })
+                    });
+
+                    const renewResult = await renewRes.json();
+
+                    if (renewResult.success) {
+                        alert('✓ Renewal request submitted!\n\n' + renewResult.message + '\n\nCheck back later for admin approval.');
+                        loadIssuedBooks(); // Reload the table
+                    } else {
+                        alert('Error: ' + renewResult.message);
+                    }
+                }
+            } catch (error) {
+                console.error('Error requesting renewal:', error);
+                alert('Failed to submit renewal request. Please try again.');
+            }
+        }
+        loadIssuedBooks();
+        loadIssuedBooksHistory();
+    </script>
+</body>
+</html>

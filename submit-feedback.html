@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Feedback - Library Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-book"></i> Library Management System
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="student-dashboard.html">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+                <span class="nav-link" id="studentDisplay">Welcome, Student (ID: ---)</span>
+                <a class="nav-link" href="index.html">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="dashboard-header">
+        <div class="container">
+            <h1><i class="fas fa-comment"></i> Submit Feedback</h1>
+        </div>
+    </div>
+
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="dashboard-card">
+                    <div class="card-header-custom">
+                        <h5 class="mb-0"><i class="fas fa-edit"></i> Feedback Form</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="feedbackForm">
+                            <div class="mb-3">
+                                <label for="feedbackType" class="form-label">Feedback Type</label>
+                                <select class="form-select" id="feedbackType" required>
+                                    <option value="">Select feedback type...</option>
+                                    <option value="suggestion">Suggestion</option>
+                                    <option value="complaint">Complaint</option>
+                                    <option value="compliment">Compliment</option>
+                                    <option value="book-request">Book Request</option>
+                                    <option value="technical-issue">Technical Issue</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="subject" class="form-label">Subject</label>
+                                <input type="text" class="form-control" id="subject" placeholder="Brief subject of your feedback" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="message" class="form-label">Detailed Message</label>
+                                <textarea class="form-control" id="message" rows="6" placeholder="Please provide detailed feedback..." required></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="rating" class="form-label">Overall Library Rating</label>
+                                <div class="rating-stars">
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="rating" id="rating1" value="1">
+                                        <label class="form-check-label" for="rating1">1 ★</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="rating" id="rating2" value="2">
+                                        <label class="form-check-label" for="rating2">2 ★★</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="rating" id="rating3" value="3">
+                                        <label class="form-check-label" for="rating3">3 ★★★</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="rating" id="rating4" value="4">
+                                        <label class="form-check-label" for="rating4">4 ★★★★</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="rating" id="rating5" value="5" checked>
+                                        <label class="form-check-label" for="rating5">5 ★★★★★</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="anonymous">
+                                <label class="form-check-label" for="anonymous">Submit anonymously</label>
+                            </div> -->
+
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-action">
+                                    <i class="fas fa-paper-plane"></i> Submit Feedback
+                                </button>
+                                <!-- <button type="button" class="btn btn-secondary" onclick="viewPreviousFeedback()">
+                                    <i class="fas fa-history"></i> View Previous Feedback
+                                </button> -->
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feedback Guidelines -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="dashboard-card">
+                    <div class="card-header-custom">
+                        <h5 class="mb-0"><i class="fas fa-info-circle"></i> Feedback Guidelines</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6><i class="fas fa-check text-success"></i> Do:</h6>
+                                <ul>
+                                    <li>Be specific and constructive</li>
+                                    <li>Provide suggestions for improvement</li>
+                                    <li>Mention positive experiences too</li>
+                                    <li>Include relevant book titles or services</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6><i class="fas fa-times text-danger"></i> Don't:</h6>
+                                <ul>
+                                    <li>Use offensive language</li>
+                                    <li>Submit duplicate feedback</li>
+                                    <li>Include personal information</li>
+                                    <li>Make false claims</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const API_BASE = 'http://localhost:3000';
+
+        // Update student ID on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const studentId = sessionStorage.getItem('studentId') || localStorage.getItem('studentId');
+            if (!studentId) {
+                alert('Please login first');
+                window.location.href = 'student-login.html';
+                return;
+            }
+
+            document.getElementById('studentDisplay').innerText = `Welcome, Student (ID: ${studentId})`;
+
+            // Handle feedback form submission
+            document.getElementById('feedbackForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const feedbackType = document.getElementById('feedbackType').value;
+                const subject = document.getElementById('subject').value;
+                const message = document.getElementById('message').value;
+                const rating = document.querySelector('input[name="rating"]:checked').value;
+                const anonymous = document.getElementById('anonymous').checked;
+
+                if (!feedbackType || !subject || !message) {
+                    alert('Please fill in all required fields');
+                    return;
+                }
+
+                try {
+                    const submitBtn = e.target.querySelector('button[type="submit"]');
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Submitting...';
+
+                    const res = await fetch(`${API_BASE}/student/${studentId}/feedback`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            subject: subject,
+                            message: message,
+                            rating: parseInt(rating),
+                            type: feedbackType,
+                            anonymous: anonymous
+                        })
+                    });
+
+                    const data = await res.json();
+
+                    if (data.success) {
+                        alert('✓ Feedback submitted successfully!\n\nThank you for your feedback. It helps us improve our services.');
+                        document.getElementById('feedbackForm').reset();
+                    } else {
+                        alert('Error: ' + (data.message || 'Failed to submit feedback'));
+                    }
+
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Feedback';
+
+                } catch (error) {
+                    console.error('Error submitting feedback:', error);
+                    alert('Error submitting feedback. Please try again.');
+                    e.target.querySelector('button[type="submit"]').disabled = false;
+                    e.target.querySelector('button[type="submit"]').innerHTML = '<i class="fas fa-paper-plane"></i> Submit Feedback';
+                }
+            });
+        });
+
+        function viewPreviousFeedback() {
+            const studentId = sessionStorage.getItem('studentId') || localStorage.getItem('studentId');
+            alert(`Viewing previous feedback submissions for student ${studentId}...`);
+        }
+    </script>
+</body>
+</html>

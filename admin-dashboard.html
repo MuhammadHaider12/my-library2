@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Library Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-book"></i> Library Management System
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="nav-link" id="adminNameDisplay">Welcome, Admin</span>
+                <a class="nav-link" href="index.html" onclick="localStorage.removeItem('adminUsername')">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <div class="container">
+            <h1><i class="fas fa-user-shield"></i> Admin Dashboard</h1>
+        </div>
+    </div>
+
+    <!-- Fines Management Modal (includes Create Fine) -->
+    <div class="modal fade" id="finesModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Manage Fines (Physical Payments)</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Create Fine Inline Form -->
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h6 class="card-title mb-3"><i class="fas fa-indian-rupee-sign"></i> Create Fine (₹, Max 1000)</h6>
+                            <form id="createFineForm" class="row g-3">
+                                <div class="col-md-4">
+                                    <label for="fineStudentId" class="form-label">Student ID</label>
+                                    <input type="text" class="form-control" id="fineStudentId" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="fineAmount" class="form-label">Amount (₹)</label>
+                                    <input type="number" class="form-control" id="fineAmount" min="1" max="1000" required>
+                                    <div class="form-text">Between ₹1 and ₹1000.</div>
+                                </div>
+                                <div class="col-md-12">
+                                    <label for="fineDescription" class="form-label">Reason / Description</label>
+                                    <textarea class="form-control" id="fineDescription" rows="2" placeholder="E.g., Late return, lost book, damaged book, etc."></textarea>
+                                </div>
+                                <div class="col-12 text-end">
+                                    <button type="submit" class="btn btn-primary-custom">Save Fine</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <button class="btn btn-sm btn-outline-primary" id="showUnpaidFinesBtn">Unpaid Only</button>
+                            <button class="btn btn-sm btn-outline-secondary" id="showAllFinesBtn">All Fines</button>
+                        </div>
+                        <small class="text-muted">All payments are assumed to be handled physically (cash/office).</small>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Fine ID</th>
+                                    <th>Student</th>
+                                    <th>Amount</th>
+                                    <th>Description</th>
+                                    <th>Issued On</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="finesTableBody">
+                                <!-- Filled by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mt-4">
+        <!-- Quick Stats -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="stats-card">
+                    <div class="stats-number" id="statTotalBooks">0</div>
+                    <div>Total Books</div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="stats-card">
+                    <div class="stats-number" id="statBooksIssued">0</div>
+                    <div>Books Issued</div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="stats-card">
+                    <div class="stats-number" id="statOverdueBooks">0</div>
+                    <div>Overdue Books</div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="stats-card">
+                    <div class="stats-number" id="statRegisteredUsers">0</div>
+                    <div>Registered Users</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Actions -->
+        <div class="row">
+            <!-- Book Management -->
+            <div class="col-md-6 mb-4">
+                <div class="dashboard-card">
+                    <div class="card-header-custom">
+                        <h5 class="mb-0"><i class="fas fa-book"></i> Book Management</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-action" onclick="showAddBookModal()">
+                                <i class="fas fa-plus"></i> Add New Book
+                            </button>
+                            <button class="btn btn-action" onclick="showUpdateBookModal()">
+                                <i class="fas fa-edit"></i> Update Book Record
+                            </button>
+                            <button class="btn btn-action" onclick="showDeleteBookModal()">
+                                <i class="fas fa-trash"></i> Delete Book
+                            </button>
+                            <button class="btn btn-action" data-bs-toggle="modal" data-bs-target="#issueBookModal">
+                                <i class="fas fa-hand-holding"></i> Issue Book
+                            </button>
+                            <a href="book-search.html" class="btn btn-action">
+                                <i class="fas fa-search"></i> Search Books
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Management -->
+            <div class="col-md-6 mb-4">
+                <div class="dashboard-card">
+                    <div class="card-header-custom">
+                        <h5 class="mb-0"><i class="fas fa-users"></i> User Management</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="student-registration.html" class="btn btn-action">
+                                <i class="fas fa-user-plus"></i> Register New User
+                            </a>
+                            <button class="btn btn-action" onclick="showUserList()">
+                                <i class="fas fa-list"></i> View All Users
+                            </button>
+                            <button class="btn btn-action" onclick="showFineManagement()">
+                                <i class="fas fa-money-bill-wave"></i> Manage Fines
+                            </button>
+                            <button class="btn btn-action" data-bs-toggle="modal" data-bs-target="#addAdminModal">
+                                <i class="fas fa-user-shield"></i> Register New Admin
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reservations & Renewals -->
+            <div class="col-md-6 mb-4">
+                <div class="dashboard-card">
+                    <div class="card-header-custom">
+                        <h5 class="mb-0"><i class="fas fa-exchange-alt"></i> Reservations & Renewals</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-action" onclick="showReservations()">
+                                <i class="fas fa-calendar-check"></i> View Reservations
+                            </button>
+                            <a href="admin-renewal-requests.html" class="btn btn-action">
+                                <i class="fas fa-redo"></i> Process Renewal Requests
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reports & Feedback -->
+            <div class="col-md-6 mb-4">
+                <div class="dashboard-card">
+                    <div class="card-header-custom">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Reports & Feedback</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-action" onclick="generateReports()">
+                                <i class="fas fa-file-pdf"></i> Generate Reports
+                            </button>
+                            <button class="btn btn-action" onclick="viewFeedback()">
+                                <i class="fas fa-comments"></i> View Feedback
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Users Modal -->
+    <div class="modal fade" id="studentsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Registered Students</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Student ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Department</th>
+                                    <th>Semester</th>
+                                    <th>Enrollment Year</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentsTableBody">
+                                <!-- Filled by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Book Modal -->
+    <div class="modal fade" id="addBookModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Book</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addBookForm">
+                        <div class="mb-3">
+                            <label for="bookId" class="form-label">Book ID</label>
+                            <input type="text" class="form-control" id="bookId" placeholder="Unique book code" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="bookTitle" class="form-label">Book Title</label>
+                            <input type="text" class="form-control" id="bookTitle" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="bookAuthor" class="form-label">Author</label>
+                            <input type="text" class="form-control" id="bookAuthor">
+                        </div>
+                        <div class="mb-3">
+                            <label for="bookIsbn" class="form-label">ISBN</label>
+                            <input type="text" class="form-control" id="bookIsbn">
+                        </div>
+                        <div class="mb-3">
+                            <label for="bookCategory" class="form-label">Category</label>
+                            <select class="form-select" id="bookCategory">
+                                <option value="">Select Category</option>
+                                <option>Fiction</option>
+                                <option>Science</option>
+                                <option>Technology</option>
+                                <option>Literature</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="bookPublisher" class="form-label">Publisher</label>
+                            <input type="text" class="form-control" id="bookPublisher">
+                        </div>
+                        <div class="mb-3">
+                            <label for="bookYear" class="form-label">Published Year</label>
+                            <input type="number" class="form-control" id="bookYear" min="1900" max="2100">
+                        </div>
+                        <div class="mb-3">
+                            <label for="bookCopies" class="form-label">Total Copies</label>
+                            <input type="number" class="form-control" id="bookCopies" min="1" value="1" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="addBook()">Add Book</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Update Book Modal -->
+    <div class="modal fade" id="updateBookModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Update Book</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="updateBookForm">
+                        <div class="mb-3">
+                            <label for="updateBookId" class="form-label">Book ID</label>
+                            <input type="text" class="form-control" id="updateBookId" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="updateBookTitle" class="form-label">New Title (optional)</label>
+                            <input type="text" class="form-control" id="updateBookTitle">
+                        </div>
+                        <div class="mb-3">
+                            <label for="updateBookAuthor" class="form-label">New Author (optional)</label>
+                            <input type="text" class="form-control" id="updateBookAuthor">
+                        </div>
+                        <div class="mb-3">
+                            <label for="updateBookCategory" class="form-label">New Category (optional)</label>
+                            <input type="text" class="form-control" id="updateBookCategory">
+                        </div>
+                        <div class="mb-3">
+                            <label for="updateBookIsbn" class="form-label">New ISBN (optional)</label>
+                            <input type="text" class="form-control" id="updateBookIsbn">
+                        </div>
+                        <div class="mb-3">
+                            <label for="updateBookPublisher" class="form-label">New Publisher (optional)</label>
+                            <input type="text" class="form-control" id="updateBookPublisher">
+                        </div>
+                        <div class="mb-3">
+                            <label for="updateBookYear" class="form-label">New Published Year (optional)</label>
+                            <input type="number" class="form-control" id="updateBookYear" min="1900" max="2100">
+                        </div>
+                        <div class="mb-3">
+                            <label for="updateBookCopies" class="form-label">New Total Copies (optional)</label>
+                            <input type="number" class="form-control" id="updateBookCopies" min="1">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="updateBook()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Book Modal -->
+    <div class="modal fade" id="deleteBookModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Delete Book</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="deleteBookForm">
+                        <div class="mb-3">
+                            <label for="deleteBookId" class="form-label">Book ID</label>
+                            <input type="text" class="form-control" id="deleteBookId" required>
+                        </div>
+                        <p class="text-danger small mb-0">This will permanently remove the book record from the system.</p>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" onclick="deleteBook()">Delete Book</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Admin Modal -->
+    <div class="modal fade" id="addAdminModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Register New Admin</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addAdminForm">
+                        <div class="mb-3">
+                            <label for="newAdminUsername" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="newAdminUsername" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="newAdminPassword" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="newAdminPassword" required>
+                            <div class="form-text">Minimum 8 characters</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="newAdminConfirmPassword" class="form-label">Confirm Password</label>
+                            <input type="password" class="form-control" id="newAdminConfirmPassword" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary-custom w-100">Create Admin</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Issue Book Modal -->
+    <div class="modal fade" id="issueBookModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Issue Book to Student</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="issueBookForm">
+                        <div class="mb-3">
+                            <label for="issueStudentId" class="form-label">Student ID</label>
+                            <input type="text" class="form-control" id="issueStudentId" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="issueBookId" class="form-label">Book ID</label>
+                            <input type="text" class="form-control" id="issueBookId" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="issueDays" class="form-label">Loan Period (Days)</label>
+                            <input type="number" class="form-control" id="issueDays" value="30" min="1" max="90" required>
+                            <div class="form-text">Default: 30 days</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary-custom w-100">Issue Book</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reservations Modal -->
+    <div class="modal fade" id="reservationsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Book Reservations</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Reservation ID</th>
+                                    <th>Student</th>
+                                    <th>Book ID</th>
+                                    <th>Title</th>
+                                    <th>Reserved Date</th>
+                                    <th>Available Copies</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reservationsTableBody">
+                                <!-- Filled by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Renewals Modal -->
+    <div class="modal fade" id="renewalsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Book Renewals</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Issue ID</th>
+                                    <th>Student</th>
+                                    <th>Book ID</th>
+                                    <th>Title</th>
+                                    <th>Issue Date</th>
+                                    <th>Due Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="renewalsTableBody">
+                                <!-- Filled by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reports Modal -->
+    <div class="modal fade" id="reportsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Library Reports</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="reportsContent">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Modal -->
+    <div class="modal fade" id="feedbackModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Student Feedback</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Student</th>
+                                    <th>Subject</th>
+                                    <th>Rating</th>
+                                    <th>Message</th>
+                                </tr>
+                            </thead>
+                            <tbody id="feedbackTableBody">
+                                <!-- Filled by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/admin-dashboard.js"></script>
+</body>
+</html>

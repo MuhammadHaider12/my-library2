@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pay Fines - Library Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-book"></i> Library Management System
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="student-dashboard.html">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+                <span class="nav-link">Welcome, Student (ID: STU001)</span>
+                <a class="nav-link" href="index.html">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="dashboard-header">
+        <div class="container">
+            <h1><i class="fas fa-credit-card"></i> Pay Fines</h1>
+        </div>
+    </div>
+
+    <div class="container mt-4">
+        <div class="row">
+            <!-- Fines Summary -->
+            <div class="col-md-6 mb-4">
+                <div class="dashboard-card">
+                    <div class="card-header-custom">
+                        <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Fines Summary</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="fines-summary">
+                            <div class="d-flex justify-content-between mb-3">
+                                <span>Total Fines Due:</span>
+                                <strong class="text-success">$0.00</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-3">
+                                <span>Overdue Books:</span>
+                                <span class="badge bg-success">0</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-3">
+                                <span>Last Fine Paid:</span>
+                                <span>2023-12-15</span>
+                            </div>
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle"></i> You have no pending fines!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Example with Fines (commented out for reference) -->
+                <!--
+                <div class="dashboard-card mt-4">
+                    <div class="card-header-custom bg-warning">
+                        <h5 class="mb-0"><i class="fas fa-exclamation-circle"></i> Pending Fines</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="fines-item mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Late Return: "Introduction to AI"</span>
+                                <strong>$5.00</strong>
+                            </div>
+                            <small class="text-muted">Due: 2024-02-01</small>
+                        </div>
+                        <div class="fines-item">
+                            <div class="d-flex justify-content-between">
+                                <span>Book Damage Fee</span>
+                                <strong>$10.00</strong>
+                            </div>
+                            <small class="text-muted">Due: 2024-02-01</small>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between total-fine">
+                            <strong>Total Amount Due:</strong>
+                            <strong class="text-danger">$15.00</strong>
+                        </div>
+                    </div>
+                </div>
+                -->
+            </div>
+
+            <!-- Payment Methods -->
+            <div class="col-md-6 mb-4">
+                <div class="dashboard-card">
+                    <div class="card-header-custom">
+                        <h5 class="mb-0"><i class="fas fa-wallet"></i> Payment Method</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="payment-methods">
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="radio" name="paymentMethod" id="creditCard" checked>
+                                <label class="form-check-label" for="creditCard">
+                                    <i class="fab fa-cc-visa"></i> Credit/Debit Card
+                                </label>
+                            </div>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="radio" name="paymentMethod" id="paypal">
+                                <label class="form-check-label" for="paypal">
+                                    <i class="fab fa-paypal"></i> PayPal
+                                </label>
+                            </div>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="radio" name="paymentMethod" id="bankTransfer">
+                                <label class="form-check-label" for="bankTransfer">
+                                    <i class="fas fa-university"></i> Bank Transfer
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Credit Card Form -->
+                        <div id="creditCardForm">
+                            <div class="mb-3">
+                                <label for="cardNumber" class="form-label">Card Number</label>
+                                <input type="text" class="form-control" id="cardNumber" placeholder="1234 5678 9012 3456">
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="expiryDate" class="form-label">Expiry Date</label>
+                                    <input type="text" class="form-control" id="expiryDate" placeholder="MM/YY">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="cvv" class="form-label">CVV</label>
+                                    <input type="text" class="form-control" id="cvv" placeholder="123">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="cardHolder" class="form-label">Card Holder Name</label>
+                                <input type="text" class="form-control" id="cardHolder" placeholder="John Doe">
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-action" onclick="processPayment()" disabled>
+                                <i class="fas fa-lock"></i> Pay Now ($0.00)
+                            </button>
+                            <button class="btn btn-secondary" onclick="viewFineHistory()">
+                                <i class="fas fa-history"></i> View Fine History
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function processPayment() {
+            alert('Payment processed successfully! Thank you.');
+            // In real implementation, this would integrate with payment gateway
+        }
+
+        function viewFineHistory() {
+            alert('Displaying fine payment history...');
+            // In real implementation, this would show a modal with history
+        }
+
+        // Example function to enable payment button when fines exist
+        function enablePayment() {
+            const paymentButton = document.querySelector('.btn-action');
+            paymentButton.disabled = false;
+            paymentButton.innerHTML = '<i class="fas fa-lock"></i> Pay Now ($15.00)';
+            paymentButton.classList.remove('btn-secondary');
+            paymentButton.classList.add('btn-action');
+        }
+    </script>
+</body>
+</html>
