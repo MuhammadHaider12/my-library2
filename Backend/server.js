@@ -22,10 +22,11 @@ function requireEnv(name) {
 }
 
 const pool = mysql.createPool({
-    host: requireEnv('DB_HOST'),
-    user: requireEnv('DB_USER'),
-    password: requireEnv('DB_PASSWORD'),
-    database: requireEnv('DB_NAME'),
+    host: process.env.DB_HOST || process.env.MYSQLHOST || requireEnv('DB_HOST'),
+    user: process.env.DB_USER || process.env.MYSQLUSER || requireEnv('DB_USER'),
+    password: process.env.DB_PASSWORD || process.env.MYSQLPASSWORD || requireEnv('DB_PASSWORD'),
+    database: process.env.DB_NAME || process.env.MYSQLDATABASE || requireEnv('DB_NAME'),
+    port: process.env.DB_PORT || process.env.MYSQLPORT || 3306,
     waitForConnections: true,
     connectionLimit: parseInt(process.env.DB_CONNECTION_LIMIT) || 10,
     queueLimit: 0
