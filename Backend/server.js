@@ -49,6 +49,41 @@ app.get('/test-db', async (req, res) => {
         res.status(500).json({ error: 'Database connection failed' });
     }
 });
+// ===========================================
+// HEALTH CHECK ENDPOINT (Railway requires this!)
+// ===========================================
+app.get('/api/health', async (req, res) => {
+  try {
+    // Test database connection
+    if (pool) {
+      await pool.query('SELECT 1');
+    }
+    
+    res.json({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      service: 'backend-api',
+      environment: process.env.NODE_ENV || 'development'
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'unhealthy',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Add this route too (Railway sometimes checks root)
+app.get('/', (req, res) => {
+  res.json({
+    message: 'API Server is running',
+    endpoints: {
+      health: '/api/health',
+      docs: '/api/docs'
+    }
+  });
+});
 
 // --- Improved Student Registration ---
 app.post('/register-student', async (req, res) => {
