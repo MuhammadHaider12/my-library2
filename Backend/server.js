@@ -40,6 +40,15 @@ app.use(cors({
 app.use(express.json());
 
 // --- Test Database Connection ---
+app.get('/', (req, res) => {
+  res.json({
+    message: 'API Server is running',
+    endpoints: {
+      health: '/api/health',
+      docs: '/api/docs'
+    }
+  });
+});
 app.get('/test-db', async (req, res) => {
     try {
         const [rows] = await pool.execute('SELECT 1 + 1 AS result');
@@ -75,15 +84,7 @@ app.get('/api/health', async (req, res) => {
 });
 
 // Add this route too (Railway sometimes checks root)
-app.get('/', (req, res) => {
-  res.json({
-    message: 'API Server is running',
-    endpoints: {
-      health: '/api/health',
-      docs: '/api/docs'
-    }
-  });
-});
+
 
 // --- Improved Student Registration ---
 app.post('/register-student', async (req, res) => {
