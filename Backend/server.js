@@ -83,6 +83,98 @@ app.get('/api/health', async (req, res) => {
     });
   }
 });
+require('dotenv').config();
+
+console.log('🚀 Starting server...');
+console.log('🔧 NODE_ENV:', process.env.NODE_ENV || 'development');
+
+// ======================
+// 2. IMPORTS
+// ======================
+const express = require('express');
+const cors = require('cors');
+
+// ======================
+// 3. CREATE EXPRESS APP
+// ======================
+
+
+// Enable CORS
+app.use(cors());
+
+// Parse JSON bodies
+app.use(express.json());
+
+// ======================
+// 4. CRITICAL: HEALTH CHECK ENDPOINTS
+// ======================
+
+// ROOT ENDPOINT (Railway often checks this)
+app.get('/', (req, res) => {
+  console.log('✅ Root endpoint hit');
+  res.json({
+    status: 'running',
+    message: '🚀 API Server is operational',
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      health: '/health',
+      apiHealth: '/api/health',
+      api: '/api/*'
+    }
+  });
+});
+
+// ALTERNATIVE HEALTH CHECK (Railway default)
+app.get('/health', (req, res) => {
+  console.log('✅ Health endpoint hit');
+  res.json({
+    status: 'healthy',
+    service: 'api-server',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
+// API HEALTH CHECK (Your current config)
+app.get('/api/health', (req, res) => {
+  console.log('✅ API Health endpoint hit');
+  res.json({
+    status: 'healthy',
+    endpoint: '/api/health',
+    timestamp: new Date().toISOString(),
+    node_version: process.version,
+    memory: process.memoryUsage()
+  });
+});
+
+// ======================
+// 5. TEST ENDPOINT
+// ======================
+app.get('/api/test', (req, res) => {
+  res.json({
+    success: true,
+    message: 'API is working!',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// ======================
+// 6. ADD YOUR ROUTES HERE
+// ======================
+// app.get('/api/users', ...)
+// app.post('/api/data', ...)
+
+// ======================
+// 7. 404 HANDLER
+// ======================
+app.use('*', (req, res) => {
+  res.status(404).json({
+    error: 'Not Found',
+    path: req.originalUrl,
+    method: req.method,
+    suggestion: 'Try /health or /api/health'
+  });
+});
 
 // Add this route too (Railway sometimes checks root)
 
@@ -1613,11 +1705,7 @@ app.get('/student/:id/issued-books-history', async (req, res) => {
 });
 
 // --- Start Server ---
-app.listen(PORT, () => {
-    console.log(`✅ Server running on http://localhost:${PORT}`);
-    console.log(`📊 Database: library`);
-    console.log(`🔗 CORS enabled for: http://localhost:5500`);
-});
+
 
 // --- Logout endpoint (best-effort client notification) ---
 // Expects: { studentId?, adminUsername? }
@@ -1632,4 +1720,44 @@ app.post('/logout', (req, res) => {
         console.error('Error handling logout:', err);
         res.status(500).json({ success: false, message: 'Server error during logout.' });
     }
+});
+
+// 8. START SERVER (CRITICAL PART!)
+// ======================
+
+const HOST = '0.0.0.0'; // ← MUST BE 0.0.0.0 for Railway!
+
+console.log(`🔧 Starting server on ${HOST}:${PORT}`);
+
+const server = app.listen(PORT, HOST, () => {
+  console.log('='.repeat(60));
+  console.log('✅ SERVER STARTED SUCCESSFULLY!');
+  console.log(`📡 Listening on: http://${HOST}:${PORT}`);
+  console.log(`🌍 External URL: https://your-project.up.railway.app`);
+  console.log(`🏥 Health checks:`);
+  console.log(`   • http://${HOST}:${PORT}/`);
+  console.log(`   • http://${HOST}:${PORT}/health`);
+  console.log(`   • http://${HOST}:${PORT}/api/health`);
+  const address = server.address();
+  console.log(`📊 Server address:`, address);
+});
+
+// Handle errors
+server.on('error', (error) => {
+  console.error('❌ Server error:', error);
+  if (error.code === 'EADDRINUSE') {
+    console.log(`Port ${PORT} is already in use. Trying ${PORT + 1}...`);
+    // Try different port
+    app.listen(PORT + 1, HOST, () => {
+      console.log(`Server started on port ${PORT + 1}`);
+    });
+  }
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down...');
+  server.close(() => {
+    console.log('Server closed');
+  });
 });
