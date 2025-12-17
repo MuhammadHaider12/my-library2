@@ -7,6 +7,10 @@ document.addEventListener('DOMContentLoaded', () => {
     loginForm.addEventListener('submit', async function (e) {
         e.preventDefault();
 
+        // Hide any previous error message
+        const errorDiv = document.getElementById('error-message');
+        errorDiv.style.display = 'none';
+
         const id = document.getElementById('student_id').value;
         const password = document.getElementById('studentPassword').value;
 
@@ -34,11 +38,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert("Error: student_id missing from server response.");
                 }
             } else {
-                alert(data.message || 'Login failed.');
+                errorDiv.textContent = data.message || 'Login failed.';
+                errorDiv.style.display = 'block';
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('Something went wrong. Please try again later.');
+            errorDiv.textContent = 'Something went wrong. Please try again later.';
+            errorDiv.style.display = 'block';
         }
     });
 });

@@ -7,6 +7,10 @@
     "start": "node backend/server.js",
     "dev": "nodemon backend/server.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MuhammadHaider12/my-library2.git"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",

@@ -91,9 +91,7 @@ console.log('🔧 NODE_ENV:', process.env.NODE_ENV || 'development');
 // ======================
 // 2. IMPORTS
 // ======================
-const express = require('express');
-const cors = require('cors');
-
+ 
 // ======================
 // 3. CREATE EXPRESS APP
 // ======================
